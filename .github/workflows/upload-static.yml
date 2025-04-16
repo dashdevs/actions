@@ -1,0 +1,53 @@
+name: Deploy static to S3
+
+on:
+  workflow_call:
+    inputs:
+      source_dir:
+        required: true
+        type: string
+      s3_bucket:
+        required: true
+        type: string
+      aws_region:
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install rclone
+        run: |
+          curl https://rclone.org/install.sh | sudo bash
+        shell: bash
+
+      - name: Configure rclone
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "[s3]
+          type = s3
+          provider = AWS
+          access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region = ${{ inputs.aws_region }}
+          " > ~/.config/rclone/rclone.conf
+        shell: bash
+
+      - name: Sync only updated files
+        # With --checksum it will compare the contents and update the file
+        run: |
+          rclone sync ${{ inputs.source_dir }} s3:${{ inputs.s3_bucket }} \
+            --checksum \
+            --verbose
+        shell: bash
