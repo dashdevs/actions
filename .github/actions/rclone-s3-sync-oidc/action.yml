@@ -1,0 +1,47 @@
+name: 'S3 Sync with Rclone (OIDC)'
+description: 'Sync files to S3 using rclone with OIDC authentication'
+inputs:
+  source_dir:
+    description: 'Local directory to sync'
+    required: true
+  s3_bucket:
+    description: 'S3 bucket name with optional path'
+    required: true
+  aws_region:
+    description: 'AWS region'
+    required: true
+  aws_role_arn:
+    description: 'ARN of AWS IAM role to assume'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.aws_role_arn }}
+        aws-region: ${{ inputs.aws_region }}
+        role-session-name: GitHubActions-${{ github.run_id }}
+
+    - name: Install rclone
+      shell: bash
+      run: |
+        curl https://rclone.org/install.sh | sudo bash
+
+    - name: Configure rclone with OIDC
+      shell: bash
+      run: |
+        mkdir -p ~/.config/rclone
+        echo "[s3]
+        type = s3
+        provider = AWS
+        region = ${{ inputs.aws_region }}
+        " > ~/.config/rclone/rclone.conf
+
+    - name: Sync files to S3
+      shell: bash
+      run: |
+        rclone sync ${{ inputs.source_dir }} s3:${{ inputs.s3_bucket }} \
+          --checksum \
+          --verbose
