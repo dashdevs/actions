@@ -1,0 +1,19 @@
+name: 'S3 Sync with Rclone'
+description: 'Sync files to S3 using rclone'
+inputs:
+  source_dir:
+    description: 'Local directory to sync'
+    required: true
+  s3_bucket:
+    description: 'S3 bucket name with optional path (e.g. "my-bucket/static")'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Sync files to S3
+      shell: bash
+      run: |
+        rclone sync ${{ inputs.source_dir }} s3:${{ inputs.s3_bucket }} \
+          --checksum \
+          --verbose

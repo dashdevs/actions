@@ -1,0 +1,21 @@
+name: 'Rclone S3 Config'
+description: 'Rclone S3 Config'
+inputs:
+  aws_region:
+    description: 'AWS region'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install rclone
+      shell: bash
+      run: |
+        curl https://rclone.org/install.sh | sudo bash
+
+    - name: Setup Rclone
+      run: |
+        rclone config create s3remote s3 \
+        provider=AWS \
+        env_auth=true \
+        region=${{ inputs.aws_region }}
