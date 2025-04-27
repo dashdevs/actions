@@ -14,8 +14,9 @@ runs:
         curl https://rclone.org/install.sh | sudo bash
 
     - name: Setup Rclone
+      shell: bash
       run: |
-        rclone config create s3remote s3 \
+        rclone config create dest s3 \
         provider=AWS \
         env_auth=true \
         region=${{ inputs.aws_region }}

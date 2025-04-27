@@ -14,6 +14,6 @@ runs:
     - name: Sync files to S3
       shell: bash
       run: |
-        rclone sync ${{ inputs.source_dir }} s3:${{ inputs.s3_bucket }} \
+        rclone sync ${{ inputs.source_dir }} dest:${{ inputs.s3_bucket }} \
           --checksum \
           --verbose
