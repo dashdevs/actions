@@ -51,12 +51,12 @@ jobs:
           role-session-name: GitHubActions-${{ github.run_id }}
 
       - name: Rclone Setup
-        uses: dashdevs/actions/.github/actions/rclone-setup@main
+        uses: dashdevs/actions/.github/actions/rclone-setup@develop
         with:
           aws_region: ${{ inputs.aws-region }}
 
       - name: Sync static files to S3
-        uses: dashdevs/actions/.github/actions/rclone-sync@main
+        uses: dashdevs/actions/.github/actions/rclone-sync@develop
         with:
           source_dir: ${{ inputs.source_dir }}
           s3_bucket: ${{ inputs.s3_bucket }}
