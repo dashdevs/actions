@@ -1,0 +1,62 @@
+name: Upload Django Static Files to S3
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        type: string
+        default: '3.11'
+      role-to-assume:
+        type: string
+        default: "arn:aws-cn:iam::123456789100:role/my-github-actions-role"
+      aws-region:
+        type: string
+        default: "us-east-1"
+      source_dir:
+        type: string
+        default: "./static/"
+      s3_bucket:
+        type: string
+        default: "<bucket-name>/static"
+
+permissions:
+  id-token: write   # Required for OIDC
+
+jobs:
+  upload-static:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ inputs.role-to-assume }}
+          aws-region: ${{ inputs.aws-region }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+
+      - name: Rclone Setup
+        uses: dashdevs/actions/.github/actions/rclone-setup@develop
+        with:
+          aws_region: ${{ inputs.aws-region }}
+
+      - name: Sync static files to S3
+        uses: dashdevs/actions/.github/actions/rclone-sync@develop
+        with:
+          source_dir: ${{ inputs.source_dir }}
+          s3_bucket: ${{ inputs.s3_bucket }}
