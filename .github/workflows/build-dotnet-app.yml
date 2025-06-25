@@ -1,0 +1,111 @@
+name: Build .NET application
+
+on:
+  workflow_call:
+    inputs:
+      amd64:
+        required: true
+        type: boolean
+      arm64:
+        required: true
+        type: boolean
+      project_path:
+        required: true
+        type: string
+      dockerfile_path:
+        required: false
+        type: string
+        default: release.Dockerfile
+
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure platforms for Docker build
+        id: docker
+        run: |
+          platforms=""
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            [[ "${{ inputs.amd64 }}" == "true" ]] && platforms="linux/amd64,"
+            [[ "${{ inputs.arm64 }}" == "true" ]] && platforms="${platforms}linux/arm64,"
+            platforms=$(echo $platforms | sed 's/,$//')
+          else
+            platforms="linux/amd64,linux/arm64"
+          fi
+          echo "platforms=$platforms" >> $GITHUB_OUTPUT
+      - name: Configure build version
+        id: build
+        run: |
+          if [[ "${{github.ref_type}}" == "tag" ]]; then
+            version=$(echo ${{ github.ref }} | cut -d'/' -f3)
+          else
+            IFS='.' read -r major minor patch <<< "$(git tag | sort -V | tail -n 1)"
+            version="${major:-0}.$((minor + 1)).0"
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
+    outputs:
+      platforms: ${{ steps.docker.outputs.platforms }}
+      version: ${{ steps.build.outputs.version }}
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: configure
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        env:
+          NUGET_AUTH_TOKEN: ${{ github.token }}
+        with:
+          dotnet-version: 8.0.x
+          source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+      - name: Build selected architectures
+        run: |
+          platforms="${{ needs.configure.outputs.platforms }}"
+
+          # Create 'architectures' mapping each platform to dotnet runtime and Docker architecture
+          # For example:
+          # 'linux/amd64' maps to 'amd64:x64' (where 'amd64' is for Docker and 'x64' is for dotnet)
+          # 'linux/arm64' maps to 'arm64:arm64'
+          architectures=$(echo "$platforms" \
+            | sed 's/linux\/amd64/amd64:x64/;s/linux\/arm64/arm64:arm64/' \
+            | tr ',' ' ')
+
+          if [[ ! "$architectures" =~ ^(([a-zA-Z0-9_]+:[a-zA-Z0-9_]+) ?)+$ ]]; then
+            echo "::error title=Invalid architectures format::" \
+              "Expected 'key:value' pairs separated by spaces." \
+              "Received: $architectures"
+            exit 1
+          fi
+
+          for pair in $architectures ; do
+            IFS=':' read -r docker_arch dotnet_arch <<< $pair
+            dotnet publish ${{ inputs.project_path }} \
+              /p:UseAppHost=false \
+              /p:Version=${{ needs.configure.outputs.version }}.${{ github.run_number }} \
+              -c Release \
+              -r linux-musl-$dotnet_arch \
+              -o publish/linux-$docker_arch
+          done
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+        with:
+          platforms: ${{ needs.configure.outputs.platforms }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: docker/build-push-action@v6
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+        with:
+          platforms: ${{ needs.configure.outputs.platforms }}
+          push: true
+          context: .
+          build-args: BINARIES=publish
+          file: ${{ inputs.dockerfile_path }}
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.run_number }}
+            ghcr.io/${{ github.repository }}:${{ needs.configure.outputs.version }}-${{ github.run_number }}
+            ghcr.io/${{ github.repository }}:${{ needs.configure.outputs.version }}
+            ghcr.io/${{ github.repository }}:latest
