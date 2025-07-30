@@ -48,8 +48,6 @@ jobs:
           echo "version=$version" >> $GITHUB_OUTPUT
       - name: Convert repository name to lowercase
         id: ghcr
-        env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           echo "repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
     outputs:
