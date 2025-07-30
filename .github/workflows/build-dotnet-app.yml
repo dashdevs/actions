@@ -47,15 +47,15 @@ jobs:
           fi
           echo "version=$version" >> $GITHUB_OUTPUT
       - name: Convert repository name to lowercase
-        id: lowercase-converter
+        id: ghcr
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          echo "ghcr_repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+          echo "repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
     outputs:
       platforms: ${{ steps.docker.outputs.platforms }}
       version: ${{ steps.build.outputs.version }}
-      ghcr_repo: ${{ steps.lowercase-converter.outputs.ghcr_repo }}
+      ghcr_repo: ${{ steps.ghcr.outputs.repo }}
 
   publish:
     runs-on: ubuntu-latest
