@@ -46,9 +46,16 @@ jobs:
             version="${major:-0}.$((minor + 1)).0"
           fi
           echo "version=$version" >> $GITHUB_OUTPUT
+      - name: Convert repository name to lowercase
+        id: lowercase-converter
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          echo "ghcr_repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
     outputs:
       platforms: ${{ steps.docker.outputs.platforms }}
       version: ${{ steps.build.outputs.version }}
+      ghcr_repo: ${{ steps.lowercase-converter.outputs.ghcr_repo }}
 
   publish:
     runs-on: ubuntu-latest
@@ -98,11 +105,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
-      - name: Convert repository name to lowercase
-        env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: |
-          echo "LOWERCASE_REPO=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
       - uses: docker/build-push-action@v6
         env:
           DOCKER_BUILD_RECORD_UPLOAD: false
@@ -113,7 +115,7 @@ jobs:
           build-args: BINARIES=publish
           file: ${{ inputs.dockerfile_path }}
           tags: |
-            ghcr.io/${{ env.LOWERCASE_REPO }}:${{ github.run_number }}
-            ghcr.io/${{ env.LOWERCASE_REPO }}:${{ needs.configure.outputs.version }}-${{ github.run_number }}
-            ghcr.io/${{ env.LOWERCASE_REPO }}:${{ needs.configure.outputs.version }}
-            ghcr.io/${{ env.LOWERCASE_REPO }}:latest
+            ghcr.io/${{ needs.configure.outputs.ghcr_repo }}:${{ github.run_number }}
+            ghcr.io/${{ needs.configure.outputs.ghcr_repo }}:${{ needs.configure.outputs.version }}-${{ github.run_number }}
+            ghcr.io/${{ needs.configure.outputs.ghcr_repo }}:${{ needs.configure.outputs.version }}
+            ghcr.io/${{ needs.configure.outputs.ghcr_repo }}:latest
