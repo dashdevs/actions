@@ -46,9 +46,14 @@ jobs:
             version="${major:-0}.$((minor + 1)).0"
           fi
           echo "version=$version" >> $GITHUB_OUTPUT
+      - name: Convert repository name to lowercase
+        id: ghcr
+        run: |
+          echo "repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
     outputs:
       platforms: ${{ steps.docker.outputs.platforms }}
       version: ${{ steps.build.outputs.version }}
+      ghcr_repo: ${{ steps.ghcr.outputs.repo }}
 
   publish:
     runs-on: ubuntu-latest
@@ -108,7 +113,7 @@ jobs:
           build-args: BINARIES=publish
           file: ${{ inputs.dockerfile_path }}
           tags: |
-            ghcr.io/${{ github.repository }}:${{ github.run_number }}
-            ghcr.io/${{ github.repository }}:${{ needs.configure.outputs.version }}-${{ github.run_number }}
-            ghcr.io/${{ github.repository }}:${{ needs.configure.outputs.version }}
-            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ needs.configure.outputs.ghcr_repo }}:${{ github.run_number }}
+            ghcr.io/${{ needs.configure.outputs.ghcr_repo }}:${{ needs.configure.outputs.version }}-${{ github.run_number }}
+            ghcr.io/${{ needs.configure.outputs.ghcr_repo }}:${{ needs.configure.outputs.version }}
+            ghcr.io/${{ needs.configure.outputs.ghcr_repo }}:latest
