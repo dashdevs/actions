@@ -81,35 +81,3 @@ jobs:
       aws-region: "us-east-1"
       source_dir: "./static/"
       s3_bucket: "my-bucket-name/static"
-```
-
-### Semantic version
-
-A reusable workflow for configuring semantic version based on previous versions
-
-#### Usage Example
-
-Create a workflow file (e.g., `.github/workflows/deploy.yml`) with the following content:
-
-```yaml
-name: Build
-
-on:
-  push:
-    branches: [main, develop]
-
-jobs:
-  version:
-    uses: dashdevs/actions/.github/workflows/semantic-version.yml@main
-    id: version
-  outputs:
-    version: ${{ steps.version.version }}
-
-  build:
-    needs: [version]
-    runs-on: ubuntu-latest
-    name: Build application
-    steps:
-      build:
-        run: echo "version is ${{ needs.version.outputs.version }}"
-```

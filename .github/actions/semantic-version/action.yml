@@ -1,0 +1,27 @@
+name: "Semantic version"
+description: "Configure semantic versioning based on git tags or branch names"
+inputs:
+  github_ref_type:
+    description: "Type of GitHub reference (branch or tag)"
+    required: true
+  github_ref:
+    description: "GitHub reference (branch or tag name)"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Configure version
+      id: version
+      run: |
+        if [[ "${{inputs.github_ref_type}}" == "tag" ]]; then
+          version=$(echo ${{ inputs.github_ref }} | cut -d'/' -f3)
+        else
+          IFS='.' read -r major minor patch <<< "$(git tag | sort -V | tail -n 1)"
+          version="${major:-0}.$((minor + 1)).0"
+        fi
+        echo "version=$version" >> $GITHUB_OUTPUT
+      shell: bash
