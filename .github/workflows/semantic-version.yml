@@ -10,8 +10,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Configure build version
-        id: build
+      - name: Configure version
+        id: version
         run: |
           if [[ "${{github.ref_type}}" == "tag" ]]; then
             version=$(echo ${{ github.ref }} | cut -d'/' -f3)
@@ -21,4 +21,4 @@ jobs:
           fi
           echo "version=$version" >> $GITHUB_OUTPUT
     outputs:
-      version: ${{ steps.build.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
