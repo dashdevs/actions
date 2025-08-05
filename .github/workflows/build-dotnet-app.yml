@@ -16,6 +16,10 @@ on:
         required: false
         type: string
         default: release.Dockerfile
+      is_migration:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   configure:
@@ -49,7 +53,11 @@ jobs:
       - name: Convert repository name to lowercase
         id: ghcr
         run: |
-          echo "repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+          repo="${GITHUB_REPOSITORY,,}"
+          if [ "${{ inputs.is_migration }}" = "true" ]; then
+            repo="${repo}-db"
+          fi
+          echo "repo=$repo" >> $GITHUB_OUTPUT  
     outputs:
       platforms: ${{ steps.docker.outputs.platforms }}
       version: ${{ steps.build.outputs.version }}
