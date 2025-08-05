@@ -16,10 +16,10 @@ on:
         required: false
         type: string
         default: release.Dockerfile
-      is_migration:
+      docker_repo_sufix:
         required: false
-        type: boolean
-        default: false
+        type: string
+        default: ''
 
 jobs:
   configure:
@@ -53,11 +53,10 @@ jobs:
       - name: Repository name string configuration
         id: ghcr
         run: |
-          repo="${GITHUB_REPOSITORY,,}"
-          if [ "${{ inputs.is_migration }}" = "true" ]; then
-            repo="${repo}.db"
-          fi
-          echo "repo=$repo" >> $GITHUB_OUTPUT  
+          repo="${GITHUB_REPOSITORY,,}${DOCKER_REPO_SUFFIX}"
+          echo "repo=$repo" >> $GITHUB_OUTPUT
+        env:
+          DOCKER_REPO_SUFFIX: ${{ inputs.docker_repo_sufix }} 
     outputs:
       platforms: ${{ steps.docker.outputs.platforms }}
       version: ${{ steps.build.outputs.version }}
