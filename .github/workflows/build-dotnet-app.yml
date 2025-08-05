@@ -16,7 +16,7 @@ on:
         required: false
         type: string
         default: release.Dockerfile
-      docker_repo_sufix:
+      docker_repo_suffix:
         required: false
         type: string
         default: ''
@@ -53,10 +53,8 @@ jobs:
       - name: Repository name string configuration
         id: ghcr
         run: |
-          repo="${GITHUB_REPOSITORY,,}${DOCKER_REPO_SUFFIX}"
+          repo="${GITHUB_REPOSITORY,,}${{inputs.docker_repo_suffix}}"
           echo "repo=$repo" >> $GITHUB_OUTPUT
-        env:
-          DOCKER_REPO_SUFFIX: ${{ inputs.docker_repo_sufix }} 
     outputs:
       platforms: ${{ steps.docker.outputs.platforms }}
       version: ${{ steps.build.outputs.version }}
