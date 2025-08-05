@@ -16,6 +16,10 @@ on:
         required: false
         type: string
         default: release.Dockerfile
+      docker_repo_suffix:
+        required: false
+        type: string
+        default: ''
 
 jobs:
   configure:
@@ -46,10 +50,11 @@ jobs:
             version="${major:-0}.$((minor + 1)).0"
           fi
           echo "version=$version" >> $GITHUB_OUTPUT
-      - name: Convert repository name to lowercase
+      - name: Repository name string configuration
         id: ghcr
         run: |
-          echo "repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+          repo="${GITHUB_REPOSITORY,,}${{inputs.docker_repo_suffix}}"
+          echo "repo=$repo" >> $GITHUB_OUTPUT
     outputs:
       platforms: ${{ steps.docker.outputs.platforms }}
       version: ${{ steps.build.outputs.version }}
