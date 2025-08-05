@@ -50,12 +50,12 @@ jobs:
             version="${major:-0}.$((minor + 1)).0"
           fi
           echo "version=$version" >> $GITHUB_OUTPUT
-      - name: Convert repository name to lowercase
+      - name: Repository name string configuration
         id: ghcr
         run: |
           repo="${GITHUB_REPOSITORY,,}"
           if [ "${{ inputs.is_migration }}" = "true" ]; then
-            repo="${repo}-db"
+            repo="${repo}.db"
           fi
           echo "repo=$repo" >> $GITHUB_OUTPUT  
     outputs:
