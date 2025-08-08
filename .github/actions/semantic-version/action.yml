@@ -17,6 +17,7 @@ runs:
           calculated_version="${major:-0}.$((minor + 1)).0"
         fi
         echo "calculated_version=$calculated_version" >> $GITHUB_OUTPUT
+        echo "calculated_version=$calculated_version"
       shell: bash
 
 outputs:
