@@ -11,15 +11,15 @@ runs:
       id: version
       run: |
         if [[ "${{ github.ref_type }}" == "tag" ]]; then
-          version=$(echo ${{ github.ref }} | cut -d'/' -f3)
+          calculated_version=$(echo ${{ github.ref }} | cut -d'/' -f3)
         else
           IFS='.' read -r major minor patch <<< "$(git tag | sort -V | tail -n 1)"
-          version="${major:-0}.$((minor + 1)).0"
+          calculated_version="${major:-0}.$((minor + 1)).0"
         fi
-        echo "version=$version" >> $GITHUB_OUTPUT
+        echo "calculated_version=$calculated_version" >> $GITHUB_OUTPUT
       shell: bash
 
 outputs:
   name:
     description: Determined semantic version number
-    value: ${{ steps.version.outputs.number }}
+    value: ${{ steps.version.outputs.calculated_version }}
