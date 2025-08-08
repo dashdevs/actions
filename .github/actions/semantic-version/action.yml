@@ -21,6 +21,6 @@ runs:
       shell: bash
 
 outputs:
-  name:
+  calculated_version:
     description: Determined semantic version number
     value: ${{ steps.version.outputs.calculated_version }}
