@@ -1,0 +1,35 @@
+name: Build NuGet packages
+
+on:
+  workflow_call:
+    inputs:
+      publish:
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet build -c Release
+
+  publish:
+    needs: [build]
+    if: ${{ success() && inputs.publish }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        env:
+          NUGET_AUTH_TOKEN: ${{ github.token }}
+        with:
+          dotnet-version: 8.0.x
+          source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+      - run: |
+          dotnet pack --configuration=Release --output artifacts --include-source
+      - run: dotnet nuget push artifacts/*.nupkg --api-key ${{ github.token }} --skip-duplicate
