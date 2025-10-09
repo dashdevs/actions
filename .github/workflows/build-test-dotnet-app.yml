@@ -1,0 +1,32 @@
+name: "Build and Test .NET application"
+
+on:
+  workflow_call:
+    inputs:
+      project_path:
+        required: true
+        type: string
+
+
+
+# proposed to restore, build, test
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5 
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install dependencies
+        run: dotnet restore ${{ inputs.project_path }}
+
+      - name: Build
+        run: |
+          dotnet build ${{ inputs.project_path }} --configuration Release --no-restore
+          /clp:ErrorsOnly /p:NoWarn=1591
+
+      - name: Test
+        run: dotnet test ${{ inputs.project_path }} --no-restore --verbosity normal
