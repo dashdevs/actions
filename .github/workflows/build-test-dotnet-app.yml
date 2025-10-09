@@ -17,8 +17,11 @@ jobs:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-dotnet@v5 
+        env:
+          NUGET_AUTH_TOKEN: ${{ github.token }}
         with:
           dotnet-version: 8.0.x
+          source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
 
       - name: Install dependencies
         run: dotnet restore ${{ inputs.project_path }}
