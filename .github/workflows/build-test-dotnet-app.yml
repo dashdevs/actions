@@ -29,7 +29,6 @@ jobs:
       - name: Build
         run: |
           dotnet build ${{ inputs.project_path }} --configuration Release --no-restore
-          /clp:ErrorsOnly /p:NoWarn=1591
 
       - name: Test
         run: dotnet test ${{ inputs.project_path }} --no-restore --verbosity normal
