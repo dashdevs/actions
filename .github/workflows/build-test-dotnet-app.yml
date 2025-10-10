@@ -31,7 +31,7 @@ jobs:
         run: |
           pwd
           cd ./tests/unit/Fintech.Core.Backoffice.Api.Tests
-          dotnet test ${{ inputs.project_path }} --configuration Release --results-directory "TestResults" \
+          dotnet test --configuration Release --results-directory "TestResults" \
             --settings cover.runsettings --collect:"XPlat Code Coverage" --no-build --no-restore
 
 
