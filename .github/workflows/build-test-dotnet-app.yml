@@ -7,9 +7,6 @@ on:
         required: true
         type: string
 
-
-
-# proposed to restore, build, test
 jobs:
   configure:
     runs-on: ubuntu-latest
@@ -31,4 +28,9 @@ jobs:
           dotnet build ${{ inputs.project_path }} --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test ${{ inputs.project_path }} --no-restore --verbosity normal
+        run: |
+          dotnet test ${{ inputs.project_path }} --configuration Release --results-directory "TestResults" \
+            --settings cover.runsettings --collect:"XPlat Code Coverage" --no-build --no-restore
+
+
+
