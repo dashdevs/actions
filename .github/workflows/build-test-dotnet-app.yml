@@ -30,7 +30,7 @@ jobs:
       - name: Test
         run: |
           pwd
-          cd ./tests/unit/Fintech.Core.Backoffice.Api.Tests
+          cd ./tests/unit/fintech.core.auth.tests
           pwd
           dotnet build -c Release
           dotnet test --configuration Release --results-directory "TestResults" \
