@@ -1,4 +1,4 @@
-name: "Build and Test .NET application"
+name: "Test .NET application"
 
 on:
   workflow_call:
@@ -23,38 +23,21 @@ jobs:
       - name: Install dependencies
         run: dotnet restore ${{ inputs.project_path }}
 
-      - name: Build
-        run: |
-          dotnet build ${{ inputs.project_path }} --configuration Release --no-restore
-
       - name: Test        
         id: tests
-        continue-on-error: true
         run: |
           dotnet build -c Release
 
           dotnet test --configuration Release --results-directory "TestResults" --collect:"XPlat Code Coverage" \
-            --no-build --no-restore 2>&1 | tee test_output.txt
+            --no-build --no-restore
 
-          # multi-line output
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          cat test_output.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Generate coverage report
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
 
-      - uses: actions/github-script@v8
-        env:
-          BODY: ${{ steps.tests.outputs.body }}
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const body = `**Test Output**
-            \`\`\`
-            ${process.env.BODY}
-            \`\`\``
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body,
-            })
+          name: coverage-report
+          path: coveragereport/
