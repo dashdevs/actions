@@ -23,20 +23,14 @@ jobs:
       - name: Install dependencies
         run: dotnet restore ${{ inputs.project_path }}
 
-      # - name: Build
-      #   run: |
-      #     dotnet build ${{ inputs.project_path }} --configuration Release --no-restore
+      - name: Build
+        run: |
+          dotnet build ${{ inputs.project_path }} --configuration Release --no-restore
 
       - name: Test        
         id: tests
         continue-on-error: true
         run: |
-          #cd ./tests/unit/fintech.core.auth.tests
-          dotnet build -c Release
-          # dotnet test --configuration Release --results-directory "TestResults" \
-          #   --settings cover.runsettings --collect:"XPlat Code Coverage" --no-build \
-          #   --no-restore 2>&1 | tee test_output.txt
-
           dotnet test --configuration Release --results-directory "TestResults" --collect:"XPlat Code Coverage" \
             --no-build --no-restore 2>&1 | tee test_output.txt
           
