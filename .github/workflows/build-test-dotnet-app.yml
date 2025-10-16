@@ -38,13 +38,15 @@ jobs:
           dotnet test --configuration Release --results-directory "TestResults" \
             --settings cover.runsettings --collect:"XPlat Code Coverage" --no-build \
             --no-restore 2>&1 | tee test_output.txt
+          cat test_output.txt
           
-      - name: Comment test results
-        uses: marocchino/sticky-pull-request-comment@v2
+      - uses: actions/github-script@v8
         with:
-          header: test-results
-          message: |
-            **Test Output**
-            ```
-            $(head -c 6000 test_output.txt)
-            ```
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '👋 Thanks for reporting!'
+            })
