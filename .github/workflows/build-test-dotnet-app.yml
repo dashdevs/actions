@@ -33,10 +33,16 @@ jobs:
         run: |
           dotnet test --configuration Release --results-directory "TestResults" --collect:"XPlat Code Coverage" \
             --no-build --no-restore 2>&1 | tee test_output.txt
-          
+
+          no_tests_message=""
+          if grep -q "is invalid\. Please use the /help option to check the list of valid arguments" test_output.txt; then
+            echo "Probably no tests were found in tests project"
+            no_tests_message="\n\n **Probably no tests were found in tests project.**"
+          fi
           # multi-line output
           echo "body<<EOF" >> $GITHUB_OUTPUT
           cat test_output.txt >> $GITHUB_OUTPUT
+          echo -e "$no_tests_message" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           
       - uses: actions/github-script@v8
