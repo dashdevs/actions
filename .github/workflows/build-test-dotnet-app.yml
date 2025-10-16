@@ -31,12 +31,10 @@ jobs:
         id: tests
         continue-on-error: true
         run: |
-          pwd
-          cd ./tests/unit/fintech.core.auth.tests
-          pwd
+          # cd ./tests/unit/fintech.core.auth.tests
           dotnet build -c Release
           dotnet test --configuration Release --results-directory "TestResults" \
-            --settings cover.runsettings --collect:"XPlat Code Coverage" --no-build \
+            --settings ./tests/unit/fintech.core.auth.tests/cover.runsettings --collect:"XPlat Code Coverage" --no-build \
             --no-restore 2>&1 | tee test_output.txt
 
           # multi-line output
