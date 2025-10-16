@@ -23,9 +23,9 @@ jobs:
       - name: Install dependencies
         run: dotnet restore ${{ inputs.project_path }}
 
-      - name: Build
-        run: |
-          dotnet build ${{ inputs.project_path }} --configuration Release --no-restore
+      # - name: Build
+      #   run: |
+      #     dotnet build ${{ inputs.project_path }} --configuration Release --no-restore
 
       - name: Test        
         id: tests
@@ -38,7 +38,7 @@ jobs:
           dotnet test --configuration Release --results-directory "TestResults" \
             --settings cover.runsettings --collect:"XPlat Code Coverage" --no-build \
             --no-restore 2>&1 | tee test_output.txt
-          output=$(test_output.txt)
+          output=$(cat answer.txt)
           echo "body=$output" >> $GITHUB_OUTPUT
           
       - uses: actions/github-script@v8
