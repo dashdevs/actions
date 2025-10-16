@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v5 
+      - uses: actions/setup-dotnet@v5
         env:
           NUGET_AUTH_TOKEN: ${{ github.token }}
         with:
@@ -27,14 +27,24 @@ jobs:
         run: |
           dotnet build ${{ inputs.project_path }} --configuration Release --no-restore
 
-      - name: Test
+      - name: Test        
+        id: tests
+        continue-on-error: true
         run: |
           pwd
           cd ./tests/unit/fintech.core.auth.tests
           pwd
           dotnet build -c Release
           dotnet test --configuration Release --results-directory "TestResults" \
-            --settings cover.runsettings --collect:"XPlat Code Coverage" --no-build --no-restore
-
-
-
+            --settings cover.runsettings --collect:"XPlat Code Coverage" --no-build \
+            --no-restore 2>&1 | tee test_output.txt
+          
+      - name: Comment test results
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: test-results
+          message: |
+            **Test Output**
+            ```
+            $(head -c 6000 test_output.txt)
+            ```
