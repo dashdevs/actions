@@ -1,0 +1,72 @@
+name: Config Gitflow
+
+description: Determines configuration name based on the Gitflow branching model (nvie.com/gitflow)
+
+inputs:
+  mapping_workflow_dispatch:
+    description: Config name to use when manually triggered via workflow_dispatch
+    required: true
+  mapping_tag:
+    description: Config name for tag refs
+    required: true
+    default: stage
+  mapping_master:
+    description: Config name for 'master' branch
+    required: true
+    default: stage
+  mapping_develop:
+    description: Config name for 'develop' branch
+    required: true
+    default: dev
+  mapping_hotfix:
+    description: Config name for 'hotfix/*' branches
+    required: true
+    default: stage
+  mapping_release:
+    description: Config name for 'release/*' branches
+    required: true
+    default: stage
+  mapping_feature:
+    description: Config name for 'feature/*' branches
+    required: true
+    default: dev
+  mapping_production:
+    description: Config name considered production (e.g. 'prod', 'production')
+    required: true
+    default: prod
+
+outputs:
+  name:
+    description: Determined configuration name
+    value: ${{ steps.config.outputs.name }}
+
+runs:
+  using: composite
+  steps:
+    - id: config
+      shell: bash
+      env:
+        CONFIG_NAME: >-
+          ${{ github.event_name == 'workflow_dispatch' && inputs.mapping_workflow_dispatch
+            || github.ref_type == 'tag' && inputs.mapping_tag
+            || github.ref_name == 'master' && inputs.mapping_master
+            || github.ref_name == 'develop' && inputs.mapping_develop
+            || startsWith(github.ref_name, 'hotfix/') && inputs.mapping_hotfix
+            || startsWith(github.ref_name, 'release/') && inputs.mapping_release
+            || startsWith(github.ref_name, 'feature/') && inputs.mapping_feature
+            || '' }}
+      run: |
+        if [[ -z "$CONFIG_NAME" ]]; then
+          echo "::error title=Invalid branch::The branch '${GITHUB_REF_NAME}' is not allowed for configuration." \
+            "Only 'master', 'develop', 'hotfix/*', 'release/*', and 'feature/*' are permitted."
+          exit 1
+        fi
+        if [[ "$GITHUB_REF_NAME" == "develop" && "$CONFIG_NAME" == "${{ inputs.mapping_production }}" ]]; then
+          echo "::error title=Configuration restriction::'${{ inputs.mapping_production }}' cannot be used from 'develop' branch."
+          exit 1
+        fi
+        if [[ "$GITHUB_REF_NAME" =~ ^feature/ && "$CONFIG_NAME" != "${{ inputs.mapping_feature }}" ]]; then
+          echo "::error title=Configuration restriction::Feature branches restricted to '${{ inputs.mapping_feature }}' configuration only."
+          exit 1
+        fi
+        echo "name=$CONFIG_NAME" >> $GITHUB_OUTPUT
