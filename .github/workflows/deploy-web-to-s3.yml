@@ -1,0 +1,70 @@
+name: Deploy Web App to S3
+
+on:
+  workflow_call:
+    inputs:
+      application_name:
+        description: Name of the application
+        required: false
+        type: string
+        default: ''
+      workflow_dispatch_environment:
+        description: Environment to deploy when manually triggered
+        required: false
+        type: string
+        default: dev
+      push_develop_branch_environment:
+        description: Environment to deploy when 'develop' branch is pushed
+        required: false
+        type: string
+        default: dev
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    steps:
+      - id: environment
+        uses: dashdevs/actions/.github/actions/config-gitflow@develop
+        with:
+          mapping_workflow_dispatch: ${{ inputs.workflow_dispatch_environment }}
+          mapping_develop: ${{ inputs.push_develop_branch_environment }}
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - id: build
+        run: |
+          if [[ "${{github.ref_type}}" == "tag" ]]; then
+            version=$(echo ${{ github.ref }} | cut -d'/' -f3)
+          else
+            IFS='.' read -r major minor patch <<< "$(git tag | sort -V | tail -n 1)"
+            version="${major:-0}.$((minor + 1)).0"
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
+    outputs:
+      environment: ${{ steps.environment.outputs.name }}
+      version: ${{ steps.build.outputs.version }}
+
+  deploy:
+    needs: configure
+    environment:
+      name: ${{ needs.configure.outputs.environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.DEPLOYMENT_ROLE }}
+          role-session-name: GitHubActions-${{ github.run_id }}
+          aws-region: ${{ vars.REGION }}
+      - run: yarn install
+      - run: yarn build
+        env:
+          VITE_APP_TITLE: "${{ inputs.application_name }}"
+          VITE_APP_VERSION: "${{ needs.configure.outputs.version }} (${{ github.run_number }})"
+          VITE_API_BASE_URL: "${{ vars.API_BASE_URL }}"
+      - run: aws s3 sync --cache-control 'no-cache' --delete dist/ s3://${{ vars.S3_BUCKET_NAME }}/
+      - run: aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} --paths '/*'
