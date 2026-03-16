@@ -73,6 +73,11 @@ jobs:
           role-to-assume: ${{ vars.DEPLOYMENT_ROLE }}
           role-session-name: GitHubActions-${{ github.run_id }}
           aws-region: ${{ vars.REGION }}
+      - if: inputs.pre_install_commands != ''
+        run: ${{ inputs.pre_install_commands }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_PACKAGE_OVERRIDE: "${{ vars.NPM_PACKAGE_OVERRIDE }}"
       - run: yarn install
       - run: yarn build
         env:
