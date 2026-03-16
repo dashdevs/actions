@@ -18,6 +18,11 @@ on:
         required: false
         type: string
         default: dev
+      working_directory:
+        description: Working directory for build commands
+        required: false
+        type: string
+        default: '.'
 
 permissions:
   contents: read
@@ -53,6 +58,9 @@ jobs:
     environment:
       name: ${{ needs.configure.outputs.environment }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
     steps:
       - uses: actions/checkout@v5
       - uses: aws-actions/configure-aws-credentials@v5
