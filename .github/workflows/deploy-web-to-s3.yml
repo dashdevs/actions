@@ -43,7 +43,7 @@ jobs:
         with:
           mapping_workflow_dispatch: ${{ inputs.workflow_dispatch_environment }}
           mapping_develop: ${{ inputs.push_develop_branch_environment }}
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - id: build
@@ -68,7 +68,11 @@ jobs:
       run:
         working-directory: ${{ inputs.working_directory }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://npm.pkg.github.com/
       - uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ vars.DEPLOYMENT_ROLE }}
@@ -77,9 +81,13 @@ jobs:
       - if: inputs.pre_install_commands != ''
         run: ${{ inputs.pre_install_commands }}
         env:
+          HUSKY: 0
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_PACKAGE_OVERRIDE: "${{ vars.NPM_PACKAGE_OVERRIDE }}"
       - run: yarn install
+        env:
+          HUSKY: 0
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: yarn build
         env:
           VITE_APP_TITLE: "${{ inputs.application_name }}"
