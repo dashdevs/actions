@@ -18,6 +18,16 @@ on:
         required: false
         type: string
         default: dev
+      working_directory:
+        description: Working directory for build commands
+        required: false
+        type: string
+        default: '.'
+      pre_install_commands:
+        description: Commands to run before yarn install
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -53,6 +63,9 @@ jobs:
     environment:
       name: ${{ needs.configure.outputs.environment }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
     steps:
       - uses: actions/checkout@v5
       - uses: aws-actions/configure-aws-credentials@v5
@@ -60,6 +73,11 @@ jobs:
           role-to-assume: ${{ vars.DEPLOYMENT_ROLE }}
           role-session-name: GitHubActions-${{ github.run_id }}
           aws-region: ${{ vars.REGION }}
+      - if: inputs.pre_install_commands != ''
+        run: ${{ inputs.pre_install_commands }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_PACKAGE_OVERRIDE: "${{ vars.NPM_PACKAGE_OVERRIDE }}"
       - run: yarn install
       - run: yarn build
         env:
