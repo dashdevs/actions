@@ -23,6 +23,11 @@ on:
         required: false
         type: string
         default: '.'
+      pre_install_commands:
+        description: Commands to run before yarn install
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
