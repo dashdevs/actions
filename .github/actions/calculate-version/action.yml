@@ -1,0 +1,24 @@
+name: Calculate Build Version
+description: Calculates a semantic-ish version from tag or latest git tag.
+inputs: {}
+outputs:
+  version:
+    description: Calculated version string
+    value: ${{ steps.calc.outputs.version }}
+runs:
+  using: composite
+  steps:
+    - id: calc
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        if [[ "${{ github.ref_type }}" == "tag" ]]; then
+          version=$(echo "${{ github.ref }}" | cut -d'/' -f3)
+        else
+          latest_tag=$(git tag | sort -V | tail -n 1)
+          IFS='.' read -r major minor patch <<< "$latest_tag"
+          version="${major:-0}.$((minor + 1)).0"
+        fi
+
+        echo "version=$version" >> "$GITHUB_OUTPUT"
