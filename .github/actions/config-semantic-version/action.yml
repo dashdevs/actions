@@ -1,14 +1,14 @@
-name: Calculate Build Version
-description: Calculates a semantic-ish version from tag or latest git tag.
+name: Configure semantic version
+description: Sets a semantic-ish version from the current tag or from the latest git tag.
 inputs: {}
 outputs:
   version:
-    description: Calculated version string
-    value: ${{ steps.calc.outputs.version }}
+    description: Semantic version string
+    value: ${{ steps.calculate-version.outputs.version }}
 runs:
   using: composite
   steps:
-    - id: calc
+    - id: calculate-version
       shell: bash
       run: |
         set -euo pipefail

@@ -40,9 +40,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Calculate build version
+      - name: Configure semantic version
         id: build
-        uses: dashdevs/actions/.github/actions/calculate-version@develop
+        uses: dashdevs/actions/.github/actions/config-semantic-version@feature/FCLIQU-3786-reusable-action-calculate-version
       - name: Repository name string configuration
         id: ghcr
         run: |
