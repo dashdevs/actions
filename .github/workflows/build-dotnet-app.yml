@@ -42,7 +42,7 @@ jobs:
           fetch-depth: 0
       - name: Configure semantic version
         id: build
-        uses: dashdevs/actions/.github/actions/config-semantic-version@feature/FCLIQU-3786-reusable-action-calculate-version
+        uses: dashdevs/actions/.github/actions/config-semantic-version@develop
       - name: Repository name string configuration
         id: ghcr
         run: |
