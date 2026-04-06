@@ -1,0 +1,24 @@
+name: Configure semantic version
+description: Sets a semantic-ish version from the current tag or from the latest git tag.
+inputs: {}
+outputs:
+  version:
+    description: Semantic version string
+    value: ${{ steps.calculate-version.outputs.version }}
+runs:
+  using: composite
+  steps:
+    - id: calculate-version
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        if [[ "${{ github.ref_type }}" == "tag" ]]; then
+          version=$(echo "${{ github.ref }}" | cut -d'/' -f3)
+        else
+          latest_tag=$(git tag | sort -V | tail -n 1)
+          IFS='.' read -r major minor patch <<< "$latest_tag"
+          version="${major:-0}.$((minor + 1)).0"
+        fi
+
+        echo "version=$version" >> "$GITHUB_OUTPUT"

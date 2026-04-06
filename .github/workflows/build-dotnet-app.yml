@@ -40,16 +40,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Configure build version
+      - name: Configure semantic version
         id: build
-        run: |
-          if [[ "${{github.ref_type}}" == "tag" ]]; then
-            version=$(echo ${{ github.ref }} | cut -d'/' -f3)
-          else
-            IFS='.' read -r major minor patch <<< "$(git tag | sort -V | tail -n 1)"
-            version="${major:-0}.$((minor + 1)).0"
-          fi
-          echo "version=$version" >> $GITHUB_OUTPUT
+        uses: dashdevs/actions/.github/actions/config-semantic-version@develop
       - name: Repository name string configuration
         id: ghcr
         run: |
