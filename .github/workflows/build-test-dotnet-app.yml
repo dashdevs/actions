@@ -6,6 +6,10 @@ on:
       project_path:
         required: true
         type: string
+      dotnet_version:
+        required: false
+        type: string
+        default: "8.0.x"
 
 jobs:
   configure:
