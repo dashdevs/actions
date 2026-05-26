@@ -19,7 +19,11 @@ on:
       docker_repo_suffix:
         required: false
         type: string
-        default: ''
+        default: ""
+      dotnet_version:
+        required: false
+        type: string
+        default: "8.0.x"
 
 jobs:
   configure:
@@ -62,7 +66,7 @@ jobs:
         env:
           NUGET_AUTH_TOKEN: ${{ github.token }}
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: ${{ inputs.dotnet_version }}
           source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
       - name: Build selected architectures
         run: |

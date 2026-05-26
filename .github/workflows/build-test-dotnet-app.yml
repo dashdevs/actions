@@ -6,6 +6,10 @@ on:
       project_path:
         required: true
         type: string
+      dotnet_version:
+        required: false
+        type: string
+        default: "8.0.x"
 
 jobs:
   configure:
@@ -17,13 +21,13 @@ jobs:
         env:
           NUGET_AUTH_TOKEN: ${{ github.token }}
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: ${{ inputs.dotnet_version }}
           source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
 
       - name: Install dependencies
         run: dotnet restore ${{ inputs.project_path }}
 
-      - name: Test        
+      - name: Test
         id: tests
         run: |
           dotnet build -c Release
@@ -42,4 +46,3 @@ jobs:
           name: coverage-report
           path: coveragereport/
           retention-days: 5
-
