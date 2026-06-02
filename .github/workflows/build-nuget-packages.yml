@@ -11,6 +11,10 @@ on:
         required: false
         type: string
         default: "8.0.x"
+      project_path:
+        required: false
+        type: string
+        default: ""
 
 jobs:
   build:
@@ -20,7 +24,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ inputs.dotnet_version }}
-      - run: dotnet build -c Release
+      - run: dotnet build ${{ inputs.project_path }} -c Release
 
   publish:
     needs: [build]
@@ -35,5 +39,5 @@ jobs:
           dotnet-version: ${{ inputs.dotnet_version }}
           source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
       - run: |
-          dotnet pack --configuration=Release --output artifacts --include-source
+          dotnet pack ${{ inputs.project_path }} --configuration=Release --output artifacts --include-source
       - run: dotnet nuget push artifacts/*.nupkg --api-key ${{ github.token }} --skip-duplicate
