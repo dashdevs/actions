@@ -22,8 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
+        env:
+          NUGET_AUTH_TOKEN: ${{ github.token }}
         with:
           dotnet-version: ${{ inputs.dotnet_version }}
+          source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
       - run: dotnet build ${{ inputs.project_path }} -c Release
 
   publish:
