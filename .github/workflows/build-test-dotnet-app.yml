@@ -13,8 +13,8 @@ on:
       test_runner:
         required: false
         type: string
-        default: "vstest"
-        description: "Test runner to use: 'vstest' or 'mtp'"
+        default: "VSTest"
+        description: "Test runner to use: 'VSTest' or 'MTP'"
 
 jobs:
   configure:
@@ -37,14 +37,14 @@ jobs:
 
       - name: Test (VSTest)
         id: tests-vstest
-        if: ${{ inputs.test_runner == 'vstest' }}
+        if: ${{ inputs.test_runner == 'VSTest' }}
         run: |
           dotnet test --configuration Release --results-directory "TestResults" --collect:"XPlat Code Coverage" \
             --no-build --no-restore
 
       - name: Test (MTP)
         id: tests-mtp
-        if: ${{ inputs.test_runner == 'mtp' }}
+        if: ${{ inputs.test_runner == 'MTP' }}
         run: |
           dotnet test --configuration Release --results-directory "TestResults" --no-build --no-restore \
             --coverage --coverage-output-format cobertura
