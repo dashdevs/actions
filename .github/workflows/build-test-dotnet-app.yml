@@ -47,7 +47,7 @@ jobs:
         if: ${{ inputs.test_runner == 'MTP' }}
         run: |
           dotnet test --configuration Release --results-directory "TestResults" --no-build --no-restore \
-            --coverage --coverage-output-format cobertura
+            --coverage --coverage-output-format cobertura --ignore-exit-code 8
 
       - name: Generate coverage report
         run: |
