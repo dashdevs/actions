@@ -27,18 +27,27 @@ jobs:
       - name: Install dependencies
         run: dotnet restore ${{ inputs.project_path }}
 
-      - name: Test
-        id: tests
-        run: |
-          dotnet build -c Release
+      - name: Build
+        run: dotnet build -c Release
 
+      - name: Test (VSTest)
+        id: tests-vstest
+        if: ${{ !startsWith(inputs.dotnet_version, '10') }}
+        run: |
           dotnet test --configuration Release --results-directory "TestResults" --collect:"XPlat Code Coverage" \
             --no-build --no-restore
+
+      - name: Test (MTP)
+        id: tests-mtp
+        if: ${{ startsWith(inputs.dotnet_version, '10') }}
+        run: |
+          dotnet test --configuration Release --results-directory "TestResults" --no-build --no-restore \
+            --coverage --coverage-output-format cobertura
 
       - name: Generate coverage report
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool
-          reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
+          reportgenerator -reports:"TestResults/**/*.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v7
