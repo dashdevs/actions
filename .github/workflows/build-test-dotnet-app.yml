@@ -32,14 +32,14 @@ jobs:
 
       - name: Test (VSTest)
         id: tests-vstest
-        if: ${{ !startsWith(inputs.dotnet_version, '10') }}
+        if: ${{ inputs.dotnet_version == '8.0.x' }}
         run: |
           dotnet test --configuration Release --results-directory "TestResults" --collect:"XPlat Code Coverage" \
             --no-build --no-restore
 
       - name: Test (MTP)
         id: tests-mtp
-        if: ${{ startsWith(inputs.dotnet_version, '10') }}
+        if: ${{ inputs.dotnet_version == '10.0.x' }}
         run: |
           dotnet test --configuration Release --results-directory "TestResults" --no-build --no-restore \
             --coverage --coverage-output-format cobertura
