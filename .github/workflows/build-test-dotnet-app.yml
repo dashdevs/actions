@@ -10,6 +10,11 @@ on:
         required: false
         type: string
         default: "8.0.x"
+      test_runner:
+        required: false
+        type: string
+        default: "VSTest"
+        description: "Test runner to use: 'VSTest' or 'MTP'"
 
 jobs:
   configure:
@@ -27,18 +32,27 @@ jobs:
       - name: Install dependencies
         run: dotnet restore ${{ inputs.project_path }}
 
-      - name: Test
-        id: tests
-        run: |
-          dotnet build -c Release
+      - name: Build
+        run: dotnet build -c Release
 
+      - name: Test (VSTest)
+        id: tests-vstest
+        if: ${{ inputs.test_runner == 'VSTest' }}
+        run: |
           dotnet test --configuration Release --results-directory "TestResults" --collect:"XPlat Code Coverage" \
             --no-build --no-restore
+
+      - name: Test (MTP)
+        id: tests-mtp
+        if: ${{ inputs.test_runner == 'MTP' }}
+        run: |
+          dotnet test --configuration Release --results-directory "TestResults" --no-build --no-restore \
+            --coverage --coverage-output-format cobertura --ignore-exit-code 8
 
       - name: Generate coverage report
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool
-          reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
+          reportgenerator -reports:"TestResults/**/*.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v7
