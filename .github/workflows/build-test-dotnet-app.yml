@@ -47,7 +47,7 @@ jobs:
         if: ${{ inputs.test_runner == 'MTP' }}
         run: | # exit-code 8 means zero tests
           dotnet test --configuration Release --results-directory "TestResults" --no-build --no-restore \
-            --coverlet --coverlet-output-format cobertura --ignore-exit-code 8 -v diag
+            --coverlet --coverlet-output-format cobertura --ignore-exit-code 8
 
       - name: Generate coverage report
         run: |
