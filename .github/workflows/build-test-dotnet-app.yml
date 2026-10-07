@@ -20,7 +20,7 @@ jobs:
   configure:
     runs-on: ubuntu-latest
     steps:
-      - name: Validation
+      - name: Validate
         env:
           TEST_RUNNER: ${{ inputs.test_runner }}
           DOTNET_VERSION: ${{ inputs.dotnet_version }}
@@ -50,9 +50,11 @@ jobs:
               ;;
           esac
 
-      - uses: actions/checkout@v7
+      - name: Checkout
+        uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v5
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
         env:
           NUGET_AUTH_TOKEN: ${{ github.token }}
         with:
