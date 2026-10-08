@@ -25,21 +25,22 @@ jobs:
           TEST_RUNNER: ${{ inputs.test_runner }}
           DOTNET_VERSION: ${{ inputs.dotnet_version }}
         run: |
+          DOTNET_MAJOR="${DOTNET_VERSION%%.*}"
           case "$TEST_RUNNER" in
             VSTest)
-              case "$DOTNET_VERSION" in
-                8.0.x|10.0.x) ;;
+              case "$DOTNET_MAJOR" in
+                8|10) ;;
                 *)
                   echo "::error title=Unsupported dotnet_version::test_runner is 'VSTest' but dotnet_version '$DOTNET_VERSION' is not in the supported list." \
-                    "Only '8.0.x' and '10.0.x' are permitted."
+                    "Only .NET 8 and .NET 10 SDK versions are permitted (e.g. '8.0.x', '10.0.x', '10.0.100')."
                   exit 1
                   ;;
               esac
               ;;
             MTP)
-              if [[ "$DOTNET_VERSION" != "10.0.x" ]]; then
+              if [[ "$DOTNET_MAJOR" != "10" ]]; then
                 echo "::error title=MTP requires dotnet 10::test_runner is 'MTP' but dotnet_version is '$DOTNET_VERSION'." \
-                  "MTP-based dotnet test requires dotnet_version '10.0.x'."
+                  "MTP-based dotnet test requires a .NET 10 SDK version (e.g. '10.0.x', '10.0.100')."
                 exit 1
               fi
               ;;
