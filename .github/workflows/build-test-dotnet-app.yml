@@ -10,14 +10,52 @@ on:
         required: false
         type: string
         default: "8.0.x"
+      test_runner:
+        required: false
+        type: string
+        default: "VSTest"
+        description: "Test runner to use: 'VSTest' or 'MTP'"
 
 jobs:
   configure:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - name: Validate
+        env:
+          TEST_RUNNER: ${{ inputs.test_runner }}
+          DOTNET_VERSION: ${{ inputs.dotnet_version }}
+        run: |
+          DOTNET_MAJOR="${DOTNET_VERSION%%.*}"
+          case "$TEST_RUNNER" in
+            VSTest)
+              case "$DOTNET_MAJOR" in
+                8|10) ;;
+                *)
+                  echo "::error title=Unsupported dotnet_version::test_runner is 'VSTest' but dotnet_version '$DOTNET_VERSION' is not in the supported list." \
+                    "Only .NET 8 and .NET 10 SDK versions are permitted (e.g. '8.0.x', '10.0.x', '10.0.100')."
+                  exit 1
+                  ;;
+              esac
+              ;;
+            MTP)
+              if [[ "$DOTNET_MAJOR" != "10" ]]; then
+                echo "::error title=MTP requires dotnet 10::test_runner is 'MTP' but dotnet_version is '$DOTNET_VERSION'." \
+                  "MTP-based dotnet test requires a .NET 10 SDK version (e.g. '10.0.x', '10.0.100')."
+                exit 1
+              fi
+              ;;
+            *)
+              echo "::error title=Unknown test_runner::'$TEST_RUNNER' is not a recognized test_runner value." \
+                "Must be 'VSTest' or 'MTP'."
+              exit 1
+              ;;
+          esac
 
-      - uses: actions/setup-dotnet@v5
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
         env:
           NUGET_AUTH_TOKEN: ${{ github.token }}
         with:
@@ -27,18 +65,20 @@ jobs:
       - name: Install dependencies
         run: dotnet restore ${{ inputs.project_path }}
 
-      - name: Test
-        id: tests
-        run: |
-          dotnet build -c Release
+      - name: Build
+        run: dotnet build -c Release
 
-          dotnet test --configuration Release --results-directory "TestResults" --collect:"XPlat Code Coverage" \
-            --no-build --no-restore
+      - name: Test
+        run: | # exit-code 8 means zero tests (MTP only)
+          dotnet test --configuration Release --results-directory "TestResults" --no-build --no-restore \
+            ${{ inputs.test_runner == 'MTP'
+              && '--coverlet --coverlet-output-format cobertura --ignore-exit-code 8'
+              || '--collect:"XPlat Code Coverage"' }}
 
       - name: Generate coverage report
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool
-          reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
+          reportgenerator -reports:"TestResults/**/*cobertura*.xml" -targetdir:"coveragereport" -reporttypes:Html
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v7
